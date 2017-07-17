@@ -1,12 +1,16 @@
 import processing.serial.*;
 
-int     Serial_SPEED=250000;
-Serial  port = null;
+int     Serial_SPEED=9600;
+Serial  inPort = null;
+Serial  outPort = null;
 boolean done = false;
 String s;
+String readVal = "";
+String newVal = "";
+uint16_t rawValues[500];
 
 // Wait for line from serial port, with timeout
-String readLine() {
+String readLine(Serial port) {
   int    start = millis();
   do {
     s = port.readStringUntil('\n');
@@ -14,8 +18,40 @@ String readLine() {
   return s;
 }
 
+
+
 void setup() {
   size(200, 200); // Dummy window for Serial
+  inPort = findPort();
+}
+
+void draw() {
+  
+  if (inPort.available() > 0) {
+    newVal = inPort.readStringUntil('\n');
+    if (newVal != null) {
+      readVal = newVal;
+    }
+    println(readVal);
+  }
+  
+  if (readVal.contains("9")) {
+    println("Ready for data...");
+    inPort.write("Ready for data\n");
+    while(inPort.read() != -1){
+      println(inPort.read()); 
+    }
+    delay(10000);
+  }   
+  
+}
+
+
+
+
+//Look for an available port
+Serial findPort() {
+  Serial port = null;
   
   // Look for an active serial port
   println("Scanning serial ports...");
@@ -28,7 +64,7 @@ void setup() {
     }
     print("Trying port " + portname + "...");
     delay(1000);
-    if (((s = readLine()) != null) && s.contains("Initialize Connection")) {
+    if (true) {
       break;
     } else {
       println();
@@ -38,15 +74,10 @@ void setup() {
   }
   if (port != null) { // Find one
       println("Arduino found");
-      println("Arduino says something!");
+      return port;
   } else {
     println("No Serial ports found");
     done = true;
-  }
-}
-
-void draw() {
-  while (!done){
-    println(port.readStringUntil("\n"));
+    return null;
   }
 }
