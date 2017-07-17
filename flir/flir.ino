@@ -21,7 +21,6 @@ void setup() {
   Serial.println("Begin");
 
   //Serial.begin(9600);
-
 }
 
 /* Main loop, get temperatures and print them */
