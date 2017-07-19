@@ -1,13 +1,17 @@
 import processing.serial.*;
 
-int     Serial_SPEED=9600;
+int   Serial_SPEED=115200;
+int dataLen = 9600;
+
 Serial  inPort = null;
 Serial  outPort = null;
 boolean done = false;
 String s;
 String readVal = "";
 String newVal = "";
-uint16_t rawValues[500];
+String data = null;
+char[] dataArr = new char[dataLen];
+byte[] imgData = new byte[dataLen];
 
 // Wait for line from serial port, with timeout
 String readLine(Serial port) {
@@ -21,32 +25,69 @@ String readLine(Serial port) {
 
 
 void setup() {
-  size(200, 200); // Dummy window for Serial
+  size(80, 60); // Dummy window for Serial
   inPort = findPort();
 }
 
 void draw() {
   
-  if (inPort.available() > 0) {
-    newVal = inPort.readStringUntil('\n');
-    if (newVal != null) {
-      readVal = newVal;
+  println("Ready for data...");
+  inPort.write("Ready!\n");
+  
+  
+
+  data = inPort.readStringUntil('\n');
+  if (data != null){
+    dataArr = char(int(split(data, ' ')));
+    print("THIS IS DATA ");
+    
+    loadPixels();  
+    // Loop through every pixel column
+    for (int x = 0; x < width; x++) {
+      // Loop through every pixel row
+      for (int y = 0; y < height; y++) {
+        // Use the formula to find the 1D location
+        int loc = x + y * width;
+        float grey = 0;
+        try {
+          grey = map(dataArr[loc], 7900, 8400, 0, 255);
+        }
+        catch (java.lang.ArrayIndexOutOfBoundsException e) {
+          println(e);
+          println(loc);
+          println(dataArr.length);
+          println(data);
+        }
+
+        byte b = (byte)((dataArr[loc] & 0xF800) << 3);
+        byte g = (byte)((dataArr[loc] & 0x7E0) << 2);
+        byte r = (byte)((dataArr[loc] & 0x1F) << 3);
+        pixels[loc] = color(grey);
+      }
     }
-    println(readVal);
+    updatePixels(); 
   }
   
-  if (readVal.contains("9")) {
-    println("Ready for data...");
-    inPort.write("Ready for data\n");
-    while(inPort.read() != -1){
-      println(inPort.read()); 
-    }
-    delay(10000);
-  }   
   
+  delay(100);
+  inPort.write("Got the data\n");
+
 }
 
 
+
+
+boolean gotString(Serial p, String s) {
+  String val="";
+  
+  if (p.available() > 0){ // If data is available to read,
+     val = p.readStringUntil('\n'); // read it and store it in val
+     if (val == s){
+        return true;
+      }
+   }
+   return false;
+}
 
 
 //Look for an available port
