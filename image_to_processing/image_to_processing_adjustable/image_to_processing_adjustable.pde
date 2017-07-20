@@ -1,38 +1,25 @@
 import processing.serial.*;
 
-int   Serial_SPEED=115200;
-int dataLen = 9600;
+int Serial_SPEED  =115200;
+int dataLen       = 9600;
 
-Serial  inPort = null;
-Serial  outPort = null;
-boolean done = false;
+Serial  inPort   = null;
+Serial  outPort  = null;
+boolean done     = false;
 String s;
-String readVal = "";
-String newVal = "";
-String data = null;
-char[] dataArr = new char[dataLen];
-byte[] imgData = new byte[dataLen];
-int min = 7900;
-int max = 8400;
+String readVal  = "";
+String newVal   = "";
+String data     = null;
+char[] dataArr  = new char[dataLen];
+byte[] imgData  = new byte[dataLen];
 int[] minmax = {9999,0};
-
-
-
-// Wait for line from serial port, with timeout
-String readLine(Serial port) {
-  int    start = millis();
-  do {
-    s = port.readStringUntil('\n');
-  } while ( (s == null) && ((millis() - start) < 3000));
-  return s;
-}
-
+color from = color(0, 0, 255);
+color to = color(255, 255, 0);
 
 
 void setup() {
   size(640, 480); // Dummy window for Serial
   inPort = findPort();
-
 }
 
 void draw() {
@@ -40,38 +27,26 @@ void draw() {
   println("Ready for data...");
   inPort.write("Ready!\n");
   PImage img = createImage(80, 60, ALPHA);
-  
-  int newMin = 9999;
-  int newMax = 0;
+  int loc;
+  float intensity = 0;
+  color myColor = 0;
 
   data = inPort.readStringUntil('\n');
   if (data != null){
     dataArr = char(int(split(data, ' ')));
     minmax = findMinMax(dataArr);
-    println(minmax);
-    print("THIS IS DATA ");
     
-    //loadPixels(); 
     img.loadPixels();
     // Loop through every pixel column
     for (int x = 0; x < img.width; x++) {
       // Loop through every pixel row
       for (int y = 0; y < img.height; y++) {
         // Use the formula to find the 1D location
-        int loc = x + y * img.width;
-        float grey = 0;
-       
+        loc = x + y * img.width;
         
         try {
-          grey = map(dataArr[loc], minmax[0], minmax[1], 0, 255);
-          
-          if ( dataArr[loc] < min ) {
-            newMin = dataArr[loc];
-          }
-          if ( dataArr[loc] > max ) {
-            newMax = dataArr[loc];
-          }
-        
+          intensity = map(dataArr[loc], minmax[0], minmax[1], 0, 1);
+          myColor = lerpColor(from, to, intensity);
         }
         catch (java.lang.ArrayIndexOutOfBoundsException e) {
           println(e);
@@ -80,22 +55,21 @@ void draw() {
           println(data);
         }
 
-        img.pixels[loc] = color(grey);
+        img.pixels[loc] = color(myColor);
       }
     }
     img.resize(640, 0);
     
     img.updatePixels(); 
     image(img,0,0);
-    min = newMin;
-    max = newMax;
   }
   
   delay(100);
   inPort.write("Got the data\n");
-
 }
 
+/* Find the minimum and maximum values in a 16 array
+*/
 int[] findMinMax(char[] arr) {
   int len = arr.length;
   int i = 0;
@@ -130,7 +104,8 @@ boolean gotString(Serial p, String s) {
 }
 
 
-//Look for an available port
+/*Look for an available port
+*/
 Serial findPort() {
   Serial port = null;
   

@@ -14,7 +14,6 @@ String val = "";
 byte leptonFrame[164];
 
 void setup() {
-  //pinMode(ledPin, OUTPUT); // Set pin as OUTPUT
   //Also set all other SPI devices CS lines to Output and High here
   pinMode(Lepton_CS, OUTPUT);
   digitalWrite(Lepton_CS, HIGH);
@@ -25,32 +24,23 @@ void setup() {
 }
 
 void loop() {
+  //Capture image
   getTemperatures();
-  
+
+  //Wait until processing is ready for image data
   waitUntil("Ready!");
 
+  //Send the data
   printValues();
 
+  // !! might not need this !!
   waitUntil("Got the data");
 }
 
-void randomValues(){
-  for(int i=0;i<DATA_LEN-1;i++){
-    rawValues[i] = '@';
-  }
-  rawValues[DATA_LEN-1] = '*';
-}
 
-void sendBytes(uint16_t arr[]){
-  int i = 0;
-  
-  for(i=0;i<DATA_LEN;i++){ 
-    Serial.print(arr[i]);
-    Serial.print(" ");
-  }
-  Serial.println();
-}
-
+/* Check to see if a specific String has been recieved on the Serial line
+ *  
+ */
 bool gotString(String s) {
   String val="";
   
@@ -63,11 +53,14 @@ bool gotString(String s) {
    return false;
 }
 
+
+/* Wait until a specific String has been sent 
+*/
 void waitUntil(String s){
   while( gotString(s) == false){}
 }
 
-/* Start Lepton SPI Transmission */
+// Start Lepton SPI Transmission
 void beginLeptonSPI() {
   //Begin SPI Transaction on alternative Clock
   //Running at 72 MHz
@@ -77,7 +70,8 @@ void beginLeptonSPI() {
 
 }
 
-/* End Lepton SPI Transmission */
+/* End Lepton SPI Transmission 
+*/
 void endLeptonSPI() {
   //End transfer - CS HIGH
   digitalWriteFast(Lepton_CS, HIGH);
@@ -86,9 +80,11 @@ void endLeptonSPI() {
 }
 
 
-/* Reads one line (164 Bytes) from the lepton over SPI */
+/* Reads one line (164 Bytes) from the lepton over SPI 
+*/
 boolean leptonReadFrame(uint8_t line) {
   bool success = true;
+  
   //Receive one frame over SPI
   SPI.transfer(leptonFrame, 164);
   //Check for success
@@ -96,20 +92,18 @@ boolean leptonReadFrame(uint8_t line) {
     success = false;
   }
   else if (leptonFrame[1] != line) {
-    int i;
-    //for(i=0;i<164;i++){
-     // Serial.print(leptonFrame[i]);
-     // }
     success = false;
   }
   return success;
 }
 
-/* Get one image from the Lepton module */
+/* Get one image from the Lepton module 
+*/
 void getTemperatures() {
   //Serial.println("Start reading temperatures");
   byte leptonError = 0;
   byte line;
+  
   //Begin SPI Transmission
   beginLeptonSPI();
   do {
@@ -132,7 +126,7 @@ void getTemperatures() {
           break;
         }
       }
-      //If line matches answer, save the packet
+      //If line looks good, save the packet
       else {
         //Go through the video pixels for one video line
         for (int column = 0; column < 80; column++) {
@@ -150,18 +144,17 @@ void getTemperatures() {
   endLeptonSPI();
 }
 
-/* Print out the 80 x 60 raw values array for every complete image */
+/* Print out the 80 x 60 raw values array for every complete image 
+*/
 void printValues(){
   //Serial.print("Start printing values");
-  //Serial.println("");
+  
   for(int i=0;i<60;i++){
     for(int j=0;j<80;j++){
       Serial.print(rawValues[(i*80) + j]);
       Serial.print(" ");
     }
   }
-  //Serial.print("Data End");
-  //Serial.println("");
   Serial.println();
 }
 
