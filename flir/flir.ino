@@ -1,31 +1,33 @@
 #include <Wire.h>
 #include <SPI.h>
 
-//Array to store one Lepton frame
-byte leptonFrame[164];
-//Array to store 80 x 60 RAW14 pixels
-uint16_t rawValues[4800];
-
-//Define the CS port for your FLIR Lepton here
+#define DATA_LEN 4800
+#define FRAME_LEN 164
+#define SERIAL_SPEED 115200
 #define Lepton_CS 10
+#define CLK_SPEED
+
+uint16_t rawValues[DATA_LEN];
+byte leptonFrame[FRAME_LEN];
+
 
 /* SPI and Serial debug setup */
 void setup() {
-  //Also set all other SPI devices CS lines to Output and High here
+  //Set CS lines to Output and High here
   pinMode(Lepton_CS, OUTPUT);
   digitalWrite(Lepton_CS, HIGH);
+  
   //Start SPI
   SPI.begin();
-  //Start UART
-  Serial.begin(115200);
-  //Serial.println("Begin");
-
-  //Serial.begin(9600);
+  //Start Serial
+  Serial.begin(SERIAL_SPEED);
 }
+
 
 /* Main loop, get temperatures and print them */
 void loop() {
   getTemperatures();
+  Serial.println("got temps");
   delay(1000);
   printValues();
   delay(1000);
@@ -36,11 +38,12 @@ void loop() {
 void beginLeptonSPI() {
   //Begin SPI Transaction on alternative Clock
   //Running at 72 MHz
-  SPI.beginTransaction(SPISettings(72000000, MSBFIRST, SPI_MODE0));
+  SPI.beginTransaction(SPISettings(CLK_SPEED, MSBFIRST, SPI_MODE0));
   //Start transfer  - CS LOW
   digitalWriteFast(Lepton_CS, LOW);
 
 }
+
 
 /* End Lepton SPI Transmission */
 void endLeptonSPI() {
@@ -55,27 +58,21 @@ void endLeptonSPI() {
 boolean leptonReadFrame(uint8_t line) {
   bool success = true;
   //Receive one frame over SPI
-  SPI.transfer(leptonFrame, 164);
+  SPI.transfer(leptonFrame, FRAME_LEN);
   //Check for success
   if ((leptonFrame[0] & 0x0F) == 0x0F) {
     success = false;
   }
   else if (leptonFrame[1] != line) {
-    int i;
-    //for(i=0;i<164;i++){
-     // Serial.print(leptonFrame[i]);
-     // }
-      
-    Serial.print("  ");
-    Serial.println(line);
     success = false;
   }
   return success;
 }
 
+
 /* Get one image from the Lepton module */
 void getTemperatures() {
-  //Serial.println("Start reading temperatures");
+  Serial.println("Start reading temperatures");
   byte leptonError = 0;
   byte line;
   //Begin SPI Transmission
@@ -113,15 +110,16 @@ void getTemperatures() {
     }
   } 
   while ((leptonError > 100) || (line != 60));
-  //Serial.println("Transmission ended");
+  Serial.println("Transmission ended");
   //End Lepton SPI
   endLeptonSPI();
 }
 
+
 /* Print out the 80 x 60 raw values array for every complete image */
 void printValues(){
-  //Serial.print("Start printing values");
-  //Serial.println("");
+  Serial.print("Start printing values");
+  Serial.println("");
   for(int i=0;i<60;i++){
     for(int j=0;j<80;j++){
       Serial.print(rawValues[(i*80) + j]);
@@ -131,7 +129,5 @@ void printValues(){
   }
   //Serial.print("Data End");
   //Serial.println("");
-  Serial.print(1234567);
-  Serial.println("");
 }
 

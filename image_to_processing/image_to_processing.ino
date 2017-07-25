@@ -1,22 +1,21 @@
 #include <Wire.h>
 #include <SPI.h>
 
-//Constants
 #define DATA_LEN 4800
+#define FRAME_LEN 164
 #define SERIAL_SPEED 115200
 //Define the CS port for your FLIR Lepton here
 #define Lepton_CS 10
 
-//Other variables
 uint16_t rawValues[DATA_LEN];
 String val = "";
-//Array to store one Lepton frame
-byte leptonFrame[164];
+byte leptonFrame[FRAME_LEN];
 
 void setup() {
-  //Also set all other SPI devices CS lines to Output and High here
+  //Set CS lines to Output and High here
   pinMode(Lepton_CS, OUTPUT);
   digitalWrite(Lepton_CS, HIGH);
+  
   //Start SPI
   SPI.begin();
   //Start UART
