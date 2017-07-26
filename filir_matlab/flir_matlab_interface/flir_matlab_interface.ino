@@ -17,7 +17,7 @@ void setup() {
   //Start SPI
   SPI.begin();
   //Start UART
-  Serial.begin(115200);
+  Serial.begin(250000);
   //Serial.println("Begin");
 
   //Serial.begin(9600);
