@@ -8,6 +8,7 @@ uint16_t rawValues[4800];
 
 //Define the CS port for your FLIR Lepton here
 #define Lepton_CS 10
+#define END_CODE 101010
 
 /* SPI and Serial debug setup */
 void setup() {
@@ -26,9 +27,9 @@ void setup() {
 /* Main loop, get temperatures and print them */
 void loop() {
   getTemperatures();
-  delay(1000);
+  delay(50);
   printValues();
-  delay(1000);
+  delay(50);
 }
 
 
@@ -61,13 +62,6 @@ boolean leptonReadFrame(uint8_t line) {
     success = false;
   }
   else if (leptonFrame[1] != line) {
-    int i;
-    //for(i=0;i<164;i++){
-     // Serial.print(leptonFrame[i]);
-     // }
-      
-    Serial.print("  ");
-    Serial.println(line);
     success = false;
   }
   return success;
@@ -131,7 +125,7 @@ void printValues(){
   }
   //Serial.print("Data End");
   //Serial.println("");
-  Serial.print(1234567);
+  Serial.print(END_CODE);
   Serial.println("");
 }
 
