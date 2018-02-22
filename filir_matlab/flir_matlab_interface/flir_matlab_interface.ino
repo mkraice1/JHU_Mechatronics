@@ -8,6 +8,7 @@ uint16_t rawValues[4800];
 
 //Define the CS port for your FLIR Lepton here
 #define Lepton_CS 10
+#define END_CODE 101010
 
 /* SPI and Serial debug setup */
 void setup() {
@@ -113,6 +114,8 @@ void getTemperatures() {
 
 /* Print out the 80 x 60 raw values array for every complete image */
 void printValues(){
+  //Serial.print("Start printing values");
+  //Serial.println("");
   for(int i=0;i<60;i++){
     for(int j=0;j<80;j++){
       Serial.print(rawValues[(i*80) + j]);
@@ -120,6 +123,8 @@ void printValues(){
     }
     Serial.println("");
   }
+  //Serial.print("Data End");
+  //Serial.println("");
+  Serial.print(END_CODE);
   Serial.println("");
 }
-
